@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventSpot – Find Local Events</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #1e0a3c;
+      background: #fff;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+    img { display: block; max-width: 100%; }
+    button { cursor: pointer; font-family: inherit; }
+
+    /* ===== Navbar ===== */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; height: 64px;
+      background: #fff; border-bottom: 1px solid #eeedf2;
+    }
+    .navbar__logo {
+      font-size: 22px; font-weight: 800; color: #d1410c;
+      letter-spacing: -0.5px;
+    }
+    .navbar__links { display: flex; gap: 28px; align-items: center; }
+    .navbar__links a {
+      font-size: 14px; font-weight: 600; color: #39364f;
+      transition: color .2s;
+    }
+    .navbar__links a:hover { color: #d1410c; }
+    .navbar__actions { display: flex; gap: 12px; align-items: center; }
+    .btn { padding: 8px 18px; border-radius: 4px; font-size: 14px; font-weight: 600; border: none; transition: background .2s, color .2s; }
+    .btn--ghost { background: transparent; color: #39364f; }
+    .btn--ghost:hover { background: #f8f7fa; }
+    .btn--primary { background: #d1410c; color: #fff; }
+    .btn--primary:hover { background: #b3370a; }
+
+    /* ===== Hero ===== */
+    .hero {
+      position: relative;
+      background: linear-gradient(135deg, #1e0a3c 0%, #3d1d72 50%, #7b34c1 100%);
+      color: #fff; padding: 80px 32px 100px; text-align: center;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 60px;
+      background: linear-gradient(to top, #fff, transparent);
+    }
+    .hero h1 { font-size: 48px; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
+    .hero p { font-size: 18px; opacity: .85; margin-bottom: 36px; }
+
+    /* ===== Search Bar ===== */
+    .search-bar {
+      display: flex; max-width: 720px; margin: 0 auto;
+      background: #fff; border-radius: 8px; overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0,0,0,.25);
+    }
+    .search-bar__field {
+      flex: 1; display: flex; align-items: center; padding: 0 16px; gap: 10px;
+      border-right: 1px solid #eeedf2;
+    }
+    .search-bar__field:last-of-type { border-right: none; }
+    .search-bar__field svg { flex-shrink: 0; color: #6f7287; }
+    .search-bar__field input {
+      width: 100%; border: none; outline: none; font-size: 15px;
+      padding: 16px 0; color: #1e0a3c; background: transparent;
+    }
+    .search-bar__field input::placeholder { color: #a0a0a0; }
+    .search-bar__btn {
+      background: #d1410c; color: #fff; border: none; padding: 0 28px;
+      font-size: 16px; font-weight: 700; cursor: pointer;
+      transition: background .2s;
+    }
+    .search-bar__btn:hover { background: #b3370a; }
+
+    /* ===== Categories ===== */
+    .categories { padding: 48px 32px 24px; max-width: 1200px; margin: 0 auto; }
+    .categories__list {
+      display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+    }
+    .categories__list li a {
+      display: inline-block; padding: 10px 22px; border-radius: 40px;
+      font-size: 14px; font-weight: 600; color: #39364f;
+      background: #f8f7fa; border: 1px solid #eeedf2;
+      transition: all .2s;
+    }
+    .categories__list li a:hover,
+    .categories__list li a.active {
+      background: #fef1ec; border-color: #d1410c; color: #d1410c;
+    }
+
+    /* ===== Section Headings ===== */
+    .section { padding: 40px 32px 56px; max-width: 1200px; margin: 0 auto; }
+    .section__header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 28px;
+    }
+    .section__header h2 { font-size: 26px; font-weight: 700; }
+    .section__header a { font-size: 14px; font-weight: 600; color: #3659e3; }
+    .section__header a:hover { text-decoration: underline; }
+
+    /* ===== Event Cards ===== */
+    .events-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+    }
+    .event-card {
+      border-radius: 12px; overflow: hidden; background: #fff;
+      border: 1px solid #eeedf2; transition: box-shadow .25s, transform .25s;
+    }
+    .event-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.1); transform: translateY(-3px); }
+    .event-card__img {
+      width: 100%; height: 180px; object-fit: cover;
+    }
+    .event-card__body { padding: 16px; }
+    .event-card__date { font-size: 13px; font-weight: 700; color: #d1410c; text-transform: uppercase; margin-bottom: 6px; }
+    .event-card__title { font-size: 16px; font-weight: 700; margin-bottom: 6px; line-height: 1.3; }
+    .event-card__location { font-size: 13px; color: #6f7287; margin-bottom: 8px; }
+    .event-card__price { font-size: 13px; font-weight: 600; color: #39364f; }
+    .event-card__tag {
+      display: inline-block; padding: 3px 10px; border-radius: 4px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .tag--music { background: #fce4ec; color: #c62828; }
+    .tag--yoga { background: #e8f5e9; color: #2e7d32; }
+    .tag--food { background: #fff3e0; color: #e65100; }
+
+    /* ===== Destinations ===== */
+    .destinations-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 16px;
+    }
+    .dest-card {
+      position: relative; border-radius: 10px; overflow: hidden;
+      height: 120px; cursor: pointer;
+    }
+    .dest-card img { width: 100%; height: 100%; object-fit: cover; }
+    .dest-card::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.55), transparent);
+    }
+    .dest-card span {
+      position: absolute; bottom: 12px; left: 14px; z-index: 1;
+      color: #fff; font-size: 15px; font-weight: 700;
+    }
+    .dest-card:hover img { transform: scale(1.05); transition: transform .3s; }
+
+    /* ===== Footer ===== */
+    .footer {
+      background: #1e0a3c; color: #dbdae3; padding: 56px 32px 32px;
+    }
+    .footer__inner {
+      max-width: 1200px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 36px;
+    }
+    .footer h4 { color: #fff; font-size: 15px; margin-bottom: 16px; }
+    .footer ul li { margin-bottom: 10px; }
+    .footer ul li a { font-size: 13px; color: #a9a8b3; transition: color .2s; }
+    .footer ul li a:hover { color: #fff; }
+    .footer__bottom {
+      max-width: 1200px; margin: 40px auto 0; padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,.1);
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; color: #6f7287; flex-wrap: wrap; gap: 12px;
+    }
+    .footer__bottom a { color: #a9a8b3; margin-left: 20px; }
+    .footer__bottom a:hover { color: #fff; }
+
+    /* ===== Chatbot Widget ===== */
+    .chatbot-fab {
+      position: fixed; bottom: 28px; right: 28px; z-index: 999;
+      width: 60px; height: 60px; border-radius: 50%;
+      background: #d1410c; color: #fff; border: none;
+      box-shadow: 0 4px 16px rgba(209,65,12,.45);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: transform .2s, box-shadow .2s;
+    }
+    .chatbot-fab:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(209,65,12,.55); }
+    .chatbot-fab svg { width: 28px; height: 28px; }
+    .chatbot-fab .badge {
+      position: absolute; top: -2px; right: -2px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #3659e3; border: 2px solid #fff;
+    }
+
+    .chatbot-window {
+      position: fixed; bottom: 100px; right: 28px; z-index: 998;
+      width: 370px; max-height: 520px;
+      background: #fff; border-radius: 16px;
+      box-shadow: 0 12px 48px rgba(0,0,0,.18);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      opacity: 0; transform: translateY(20px) scale(.95);
+      pointer-events: none;
+      transition: opacity .25s, transform .25s;
+    }
+    .chatbot-window.open {
+      opacity: 1; transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .chatbot-window__header {
+      background: linear-gradient(135deg, #1e0a3c, #7b34c1);
+      color: #fff; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .chatbot-window__header h3 { font-size: 16px; font-weight: 700; }
+    .chatbot-window__header button {
+      background: none; border: none; color: #fff; cursor: pointer;
+      font-size: 20px; line-height: 1; opacity: .8; transition: opacity .2s;
+    }
+    .chatbot-window__header button:hover { opacity: 1; }
+
+    .chatbot-messages {
+      flex: 1; overflow-y: auto; padding: 16px 20px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .chat-msg {
+      max-width: 85%; padding: 10px 14px; border-radius: 14px;
+      font-size: 14px; line-height: 1.45; word-wrap: break-word;
+    }
+    .chat-msg--bot {
+      align-self: flex-start;
+      background: #f3f0f8; color: #1e0a3c;
+      border-bottom-left-radius: 4px;
+    }
+    .chat-msg--user {
+      align-self: flex-end;
+      background: #d1410c; color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-msg--bot .quick-replies { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .chat-msg--bot .quick-replies button {
+      padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      background: #fff; color: #3659e3; border: 1px solid #3659e3;
+      cursor: pointer; transition: all .2s;
+    }
+    .chat-msg--bot .quick-replies button:hover { background: #3659e3; color: #fff; }
+
+    .chat-msg--bot .studio-block { margin-top: 10px; }
+    .chat-msg--bot .studio-block + .studio-block { margin-top: 14px; }
+    .chat-msg--bot .studio-block .studio-name {
+      font-size: 13px; font-weight: 700; color: #1e0a3c; margin-bottom: 6px;
+    }
+    .chat-msg--bot .studio-block .studio-location {
+      font-size: 11px; color: #6f7287; margin-bottom: 8px;
+    }
+    .chat-msg--bot .time-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chat-msg--bot .time-pills button {
+      padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7;
+      cursor: pointer; transition: all .2s;
+    }
+    .chat-msg--bot .time-pills button:hover {
+      background: #2e7d32; color: #fff; border-color: #2e7d32;
+    }
+
+    .chatbot-input {
+      display: flex; border-top: 1px solid #eeedf2; padding: 12px 14px; gap: 8px;
+    }
+    .chatbot-input input {
+      flex: 1; border: 1px solid #dbdae3; border-radius: 8px;
+      padding: 10px 14px; font-size: 14px; outline: none;
+      transition: border-color .2s;
+    }
+    .chatbot-input input:focus { border-color: #7b34c1; }
+    .chatbot-input button {
+      background: #d1410c; color: #fff; border: none; border-radius: 8px;
+      padding: 0 16px; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: background .2s;
+    }
+    .chatbot-input button:hover { background: #b3370a; }
+
+    /* ===== Payment Modal (Stripe Payment Element) ===== */
+    .payment-overlay {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .3s;
+    }
+    .payment-overlay.open { opacity: 1; pointer-events: auto; }
+    .payment-modal {
+      background: #fff; border-radius: 16px; width: 440px; max-width: 94vw;
+      max-height: 92vh; overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(0,0,0,.25);
+      transform: translateY(20px); transition: transform .3s;
+    }
+    .payment-overlay.open .payment-modal { transform: translateY(0); }
+    .payment-modal__header {
+      padding: 24px 28px 0; display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .payment-modal__header h2 { font-size: 20px; font-weight: 700; }
+    .payment-modal__close {
+      background: none; border: none; font-size: 24px; color: #6f7287;
+      cursor: pointer; line-height: 1; padding: 0;
+    }
+    .payment-modal__close:hover { color: #1e0a3c; }
+
+    .payment-modal__summary {
+      margin: 20px 28px; padding: 16px; border-radius: 10px;
+      background: #f8f7fa; border: 1px solid #eeedf2;
+    }
+    .payment-modal__summary .item-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 14px; margin-bottom: 6px;
+    }
+    .payment-modal__summary .item-row:last-child { margin-bottom: 0; }
+    .payment-modal__summary .item-label { color: #6f7287; }
+    .payment-modal__summary .item-value { font-weight: 600; color: #1e0a3c; }
+    .payment-modal__summary .total-row {
+      border-top: 1px solid #dbdae3; margin-top: 10px; padding-top: 10px;
+    }
+    .payment-modal__summary .total-row .item-value { font-size: 18px; color: #d1410c; }
+
+    .payment-modal__form { padding: 0 28px 28px; }
+    .payment-modal__form label {
+      display: block; font-size: 13px; font-weight: 600; color: #39364f;
+      margin-bottom: 6px; margin-top: 16px;
+    }
+    .payment-modal__form label:first-child { margin-top: 0; }
+
+    /* Stripe Payment Element container */
+    #stripe-payment-element {
+      border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;
+    }
+
+    /* Simulated Stripe PE fields (demo) */
+    .stripe-pe-sim { padding: 0; }
+    .stripe-pe-sim__tabs {
+      display: flex; border-bottom: 2px solid #e0e0e0; background: #f7f7f7;
+    }
+    .stripe-pe-sim__tab {
+      flex: 1; padding: 12px 8px; text-align: center; font-size: 13px; font-weight: 500;
+      color: #6f7287; background: none; border: none; cursor: pointer;
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+      transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .stripe-pe-sim__tab.active {
+      color: #1e0a3c; border-bottom-color: #1e0a3c; background: #fff;
+    }
+    .stripe-pe-sim__tab:hover { color: #1e0a3c; }
+    .stripe-pe-sim__tab svg { width: 20px; height: 14px; }
+
+    .stripe-pe-sim__body { padding: 16px; }
+    .stripe-pe-sim__row { display: flex; gap: 12px; margin-bottom: 12px; }
+    .stripe-pe-sim__row:last-child { margin-bottom: 0; }
+    .stripe-pe-sim__field { flex: 1; }
+    .stripe-pe-sim__field span {
+      display: block; font-size: 12px; font-weight: 500; color: #6f7287;
+      margin-bottom: 4px;
+    }
+    .stripe-pe-sim__field input {
+      width: 100%; padding: 10px 12px; border: 1px solid #e0e0e0; border-radius: 6px;
+      font-size: 14px; color: #1e0a3c; outline: none; background: #fff;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .stripe-pe-sim__field input:focus {
+      border-color: #635bff; box-shadow: 0 0 0 3px rgba(99,91,255,.15);
+    }
+    .stripe-pe-sim__field input::placeholder { color: #aab7c4; }
+
+    .stripe-badge {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      margin-top: 14px; font-size: 11px; color: #6f7287;
+    }
+    .stripe-badge svg { height: 14px; }
+
+    .pay-btn {
+      width: 100%; margin-top: 20px; padding: 14px; border-radius: 8px;
+      font-size: 16px; font-weight: 700; border: none; cursor: pointer;
+      background: #635bff; color: #fff;
+      transition: background .2s, transform .1s;
+    }
+    .pay-btn:hover { background: #5147e6; }
+    .pay-btn:active { transform: scale(.98); }
+    .pay-btn:disabled { opacity: .6; cursor: not-allowed; }
+    .pay-btn .spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin .6s linear infinite;
+      vertical-align: middle; margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Success state */
+    .payment-success {
+      text-align: center; padding: 40px 28px;
+    }
+    .payment-success .checkmark {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: #2e7d32; color: #fff; display: flex;
+      align-items: center; justify-content: center;
+      margin: 0 auto 20px; font-size: 32px;
+    }
+    .payment-success h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .payment-success p { font-size: 14px; color: #6f7287; margin-bottom: 20px; line-height: 1.5; }
+    .payment-success .done-btn {
+      padding: 12px 32px; border-radius: 8px; font-size: 14px; font-weight: 600;
+      background: #d1410c; color: #fff; border: none; cursor: pointer;
+    }
+    .payment-success .done-btn:hover { background: #b3370a; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 30px; }
+      .search-bar { flex-direction: column; }
+      .search-bar__field { border-right: none; border-bottom: 1px solid #eeedf2; }
+      .search-bar__btn { padding: 14px; }
+      .navbar__links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Navbar ===== -->
+  <nav class="navbar">
+    <a href="#" class="navbar__logo">EventSpot</a>
+    <div class="navbar__links">
+      <a href="#">Find Events</a>
+      <a href="#">Create Events</a>
+      <a href="#">Help Center</a>
+    </div>
+    <div class="navbar__actions">
+      <button class="btn btn--ghost">Log In</button>
+      <button class="btn btn--primary">Sign Up</button>
+    </div>
+  </nav>
+
+  <!-- ===== Hero + Search ===== -->
+  <section class="hero">
+    <h1>Discover events near you</h1>
+    <p>Find the best local music, food, yoga, and community happenings.</p>
+    <div class="search-bar">
+      <div class="search-bar__field">
+        <!-- Search icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchKeyword" placeholder="Search events" />
+      </div>
+      <div class="search-bar__field">
+        <!-- Location icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 6-9 13-9 13S3 16 3 10a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <input type="text" id="searchLocation" placeholder="Seattle, WA" />
+      </div>
+      <button class="search-bar__btn" onclick="handleSearch()">Search</button>
+    </div>
+  </section>
+
+  <!-- ===== Category Pills ===== -->
+  <div class="categories">
+    <ul class="categories__list">
+      <li><a href="#" class="active">All</a></li>
+      <li><a href="#">Music</a></li>
+      <li><a href="#">Nightlife</a></li>
+      <li><a href="#">Yoga &amp; Wellness</a></li>
+      <li><a href="#">Food &amp; Drink</a></li>
+      <li><a href="#">Performing Arts</a></li>
+      <li><a href="#">Holidays</a></li>
+      <li><a href="#">Business</a></li>
+      <li><a href="#">Hobbies</a></li>
+    </ul>
+  </div>
+
+  <!-- ===== Music Events in Seattle ===== -->
+  <section class="section">
+    <div class="section__header">
+      <h2>Music Events in Seattle</h2>
+      <a href="#">See more</a>
+    </div>
+    <div class="events-grid">
+      <!-- Card 1 -->
+      <article class="event-card">
+        <img class="event-card__img"
+             src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=600&h=360&fit=crop"
+             alt="Live concert" />
+        <div class="event-card__body">
+          <span class="event-card__tag tag--music">Music</span>
+          <p class="event-card__date">Sat, Mar 14 · 8:00 PM</p>
+          <h3 class="event-card__title">Indie Nights: Pacific Northwest Showcase</h3>
+          <p class="event-card__location">The Crocodile · Seattle, WA</p>
+          <p class="event-card__price">From $25.00</p>
+        </div>
+      </article>
+      <!-- Card 2 -->
+      <article class="event-card">
+        <img class="event-card__img"
+             src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&h=360&fit=crop"
+             alt="Jazz performance" />
+        <div class="event-card__body">
+          <span class="event-card__tag tag--music">Music</span>
+          <p class="event-card__date">Fri, Mar 20 · 7:30 PM</p>
+          <h3 class="event-card__title">Seattle Jazz Collective: An Evening of Soul</h3>
+          <p class="event-card__location">Jazz Alley · Seattle, WA</p>
+          <p class="event-card__price">From $35.00</p>
+        </div>
+      </article>
+      <!-- Card 3 -->
+      <article class="event-card">
+        <img class="event-card__img"
+             src="https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=600&h=360&fit=crop"
+             alt="Outdoor music festival" />
+        <div class="event-card__body">
+          <span class="event-card__tag tag--music">Music</span>
+          <p class="event-card__date">Sat, Apr 4 · 12:00 PM</p>
+          <h3 class="event-card__title">Emerald City Music Festival 2026</h3>
+          <p class="event-card__location">Gas Works Park · Seattle, WA</p>
+          <p class="event-card__price">From $55.00</p>
+        </div>
+      </article>
+      <!-- Card 4 -->
+      <article class="event-card">
+        <img class="event-card__img"
+             src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&h=360&fit=crop"
+             alt="DJ set" />
+        <div class="event-card__body">
+          <span class="event-card__tag tag--music">Music</span>
+          <p class="event-card__date">Sun, Apr 12 · 9:00 PM</p>
+          <h3 class="event-card__title">Deep House Sundays w/ DJ Aurora</h3>
+          <p class="event-card__location">Neumos · Seattle, WA</p>
+          <p class="event-card__price">From $15.00</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ===== Yoga Events in Seattle ===== -->
+  <section class="section">
+    <div class="section__header">
+      <h2>Yoga &amp; Wellness in Seattle</h2>
+      <a href="#">See more</a>
+    </div>
+    <div class="events-grid">
+      <!-- Card 1 -->
+      <article class="event-card">
+        <img class="event-card__img"
+             src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&h=360&fit=crop"
+             alt="Yoga session" />
+        <div class="event-card__body">
+          <span class="event-card__tag tag--yoga">Yoga</span>
+          <p class="event-card__date">Sun, Mar 8 · 9:00 AM</p>
+          <h3 class="event-card__title">Sunrise Yoga at Kerry Park</h3>
+          <p class="event-card__location">Kerry Park · Seattle, WA</p>
+          <p class="event-card__price">Free</p>
+        </div>
+      </article>
+      <!-- Card 2 -->
+      <article class="event-card">
+        <img class="event-card__img"
+             src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&h=360&fit=crop"
+             alt="Meditation and yoga retreat" />
+        <div class="event-card__body">
+          <span class="event-card__tag tag--yoga">Yoga</span>
+          <p class="event-card__date">Sat, Mar 21 · 10:00 AM</p>
+          <h3 class="event-card__title">Sound Bath &amp; Restorative Yoga</h3>
+          <p class="event-card__location">8 Limbs Yoga · Capitol Hill, Seattle</p>
+          <p class="event-card__price">From $20.00</p>
+        </div>
+      </article>
+      <!-- Card 3 -->
+      <article class="event-card">
+        <img class="event-card__img"
+             src="https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?w=600&h=360&fit=crop"
+             alt="Group yoga" />
+        <div class="event-card__body">
+          <span class="event-card__tag tag--yoga">Yoga</span>
+          <p class="event-card__date">Sat, Apr 5 · 8:30 AM</p>
+          <h3 class="event-card__title">Yoga on the Waterfront – Spring Series</h3>
+          <p class="event-card__location">Olympic Sculpture Park · Seattle, WA</p>
+          <p class="event-card__price">From $10.00</p>
+        </div>
+      </article>
+      <!-- Card 4 -->
+      <article class="event-card">
+        <img class="event-card__img"
+             src="https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=600&h=360&fit=crop"
+             alt="Yoga workshop" />
+        <div class="event-card__body">
+          <span class="event-card__tag tag--yoga">Yoga</span>
+          <p class="event-card__date">Sun, Apr 19 · 11:00 AM</p>
+          <h3 class="event-card__title">Breathwork &amp; Flow: Spring Awakening</h3>
+          <p class="event-card__location">Be Luminous Yoga · Fremont, Seattle</p>
+          <p class="event-card__price">From $18.00</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ===== Restaurant / Food Events in Seattle ===== -->
+  <section class="section">
+    <div class="section__header">
+      <h2>Restaurant &amp; Food Events in Seattle</h2>
+      <a href="#">See more</a>
+    </div>
+    <div class="events-grid">
+      <!-- Card 1 -->
+      <article class="event-card">
+        <img class="event-card__img"
+             src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=360&fit=crop"
+             alt="Fine dining" />
+        <div class="event-card__body">
+          <span class="event-card__tag tag--food">Food &amp; Drink</span>
+          <p class="event-card__date">Fri, Mar 13 · 6:30 PM</p>
+          <h3 class="event-card__title">Pike Place Market Chef's Table Experience</h3>
+          <p class="event-card__location">Pike Place Market · Seattle, WA</p>
+          <p class="event-card__price">From $75.00</p>
+        </div>
+      </article>
+      <!-- Card 2 -->
+      <article class="event-card">
+        <img class="event-card__img"
+             src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&h=360&fit=crop"
+             alt="Wine tasting" />
+        <div class="event-card__body">
+          <span class="event-card__tag tag--food">Food &amp; Drink</span>
+          <p class="event-card__date">Sat, Mar 28 · 5:00 PM</p>
+          <h3 class="event-card__title">Pacific NW Wine &amp; Small Plates Pairing</h3>
+          <p class="event-card__location">Purple Café · Seattle, WA</p>
+          <p class="event-card__price">From $45.00</p>
+        </div>
+      </article>
+      <!-- Card 3 -->
+      <article class="event-card">
+        <img class="event-card__img"
+             src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=360&fit=crop"
+             alt="Food festival" />
+        <div class="event-card__body">
+          <span class="event-card__tag tag--food">Food &amp; Drink</span>
+          <p class="event-card__date">Sat, Apr 11 · 11:00 AM</p>
+          <h3 class="event-card__title">Seattle Street Food Festival</h3>
+          <p class="event-card__location">South Lake Union · Seattle, WA</p>
+          <p class="event-card__price">Free entry</p>
+        </div>
+      </article>
+      <!-- Card 4 -->
+      <article class="event-card">
+        <img class="event-card__img"
+             src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=360&fit=crop"
+             alt="Sushi making class" />
+        <div class="event-card__body">
+          <span class="event-card__tag tag--food">Food &amp; Drink</span>
+          <p class="event-card__date">Sun, Apr 26 · 2:00 PM</p>
+          <h3 class="event-card__title">Hands-On Sushi Making with Chef Tanaka</h3>
+          <p class="event-card__location">Japonessa · Seattle, WA</p>
+          <p class="event-card__price">From $65.00</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ===== Top Destinations ===== -->
+  <section class="section">
+    <div class="section__header">
+      <h2>Top destinations</h2>
+    </div>
+    <div class="destinations-grid">
+      <div class="dest-card">
+        <img src="https://images.unsplash.com/photo-1534430480872-3498386e7856?w=400&h=240&fit=crop" alt="Seattle" />
+        <span>Seattle</span>
+      </div>
+      <div class="dest-card">
+        <img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400&h=240&fit=crop" alt="New York" />
+        <span>New York</span>
+      </div>
+      <div class="dest-card">
+        <img src="https://images.unsplash.com/photo-1460881680858-30d872d5b530?w=400&h=240&fit=crop" alt="Los Angeles" />
+        <span>Los Angeles</span>
+      </div>
+      <div class="dest-card">
+        <img src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&h=240&fit=crop" alt="Chicago" />
+        <span>Chicago</span>
+      </div>
+      <div class="dest-card">
+        <img src="https://images.unsplash.com/photo-1569959220744-ff553533f492?w=400&h=240&fit=crop" alt="San Francisco" />
+        <span>San Francisco</span>
+      </div>
+      <div class="dest-card">
+        <img src="https://images.unsplash.com/photo-1587974928442-77dc3e0dba72?w=400&h=240&fit=crop" alt="Miami" />
+        <span>Miami</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Footer ===== -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <div>
+        <h4>Use EventSpot</h4>
+        <ul>
+          <li><a href="#">Create Events</a></li>
+          <li><a href="#">Pricing</a></li>
+          <li><a href="#">Event Marketing Platform</a></li>
+          <li><a href="#">Mobile Ticket App</a></li>
+          <li><a href="#">FAQs</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Plan Events</h4>
+        <ul>
+          <li><a href="#">Sell Tickets Online</a></li>
+          <li><a href="#">Event Management Software</a></li>
+          <li><a href="#">Virtual Events Platform</a></li>
+          <li><a href="#">QR Code Check-In</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Find Events</h4>
+        <ul>
+          <li><a href="#">Seattle Music Events</a></li>
+          <li><a href="#">Seattle Yoga Events</a></li>
+          <li><a href="#">Seattle Food Events</a></li>
+          <li><a href="#">New York Events</a></li>
+          <li><a href="#">Los Angeles Events</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Connect With Us</h4>
+        <ul>
+          <li><a href="#">Contact Support</a></li>
+          <li><a href="#">X (Twitter)</a></li>
+          <li><a href="#">Facebook</a></li>
+          <li><a href="#">Instagram</a></li>
+          <li><a href="#">LinkedIn</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>&copy; 2026 EventSpot</span>
+      <div>
+        <a href="#">Terms</a>
+        <a href="#">Privacy</a>
+        <a href="#">Accessibility</a>
+        <a href="#">Cookies</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== Payment Modal (Stripe Payment Element) ===== -->
+  <div class="payment-overlay" id="paymentOverlay">
+    <div class="payment-modal" id="paymentModal">
+      <!-- Default: payment form -->
+      <div id="paymentFormView">
+        <div class="payment-modal__header">
+          <h2>Complete your booking</h2>
+          <button class="payment-modal__close" id="paymentClose">&times;</button>
+        </div>
+        <div class="payment-modal__summary" id="paymentSummary">
+          <!-- Filled dynamically -->
+        </div>
+        <div class="payment-modal__form">
+          <div id="stripe-payment-element">
+            <!-- Simulated Stripe Payment Element (demo) -->
+            <div class="stripe-pe-sim">
+              <div class="stripe-pe-sim__tabs">
+                <button class="stripe-pe-sim__tab active" data-method="card">
+                  <svg viewBox="0 0 24 16" fill="none"><rect x=".5" y=".5" width="23" height="15" rx="2" stroke="#6f7287"/><path d="M0 5h24v3H0z" fill="#6f7287"/></svg>
+                  Card
+                </button>
+                <button class="stripe-pe-sim__tab" data-method="apple">
+                  <svg viewBox="0 0 24 16" fill="none"><rect x=".5" y=".5" width="23" height="15" rx="2" stroke="#6f7287"/><text x="6" y="12" font-size="10" fill="#6f7287">Pay</text></svg>
+                   Pay
+                </button>
+                <button class="stripe-pe-sim__tab" data-method="google">
+                  <svg viewBox="0 0 24 16" fill="none"><rect x=".5" y=".5" width="23" height="15" rx="2" stroke="#6f7287"/><text x="5" y="12" font-size="9" fill="#6f7287">G</text></svg>
+                  Google Pay
+                </button>
+              </div>
+              <div class="stripe-pe-sim__body" id="stripeCardForm">
+                <div class="stripe-pe-sim__row">
+                  <div class="stripe-pe-sim__field" style="flex:1">
+                    <span>Card number</span>
+                    <input type="text" id="peCardNumber" placeholder="1234 1234 1234 1234" maxlength="19" />
+                  </div>
+                </div>
+                <div class="stripe-pe-sim__row">
+                  <div class="stripe-pe-sim__field">
+                    <span>Expiration</span>
+                    <input type="text" id="peExpiry" placeholder="MM / YY" maxlength="7" />
+                  </div>
+                  <div class="stripe-pe-sim__field">
+                    <span>CVC</span>
+                    <input type="text" id="peCVC" placeholder="CVC" maxlength="4" />
+                  </div>
+                </div>
+                <div class="stripe-pe-sim__row">
+                  <div class="stripe-pe-sim__field" style="flex:1">
+                    <span>Country</span>
+                    <input type="text" id="peCountry" value="United States" readonly style="background:#f7f7f7; color:#6f7287;" />
+                  </div>
+                  <div class="stripe-pe-sim__field">
+                    <span>ZIP</span>
+                    <input type="text" id="peZip" placeholder="12345" maxlength="10" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="stripe-badge">
+            <svg viewBox="0 0 60 25" fill="none" xmlns="http://www.w3.org/2000/svg"><text x="0" y="18" font-size="14" font-weight="600" fill="#635bff" font-family="Arial">stripe</text></svg>
+            Powered by <b style="color:#635bff; margin-left:2px">Stripe</b>
+          </div>
+          <button class="pay-btn" id="payBtn" onclick="processPayment()">
+            Pay now
+          </button>
+        </div>
+      </div>
+
+      <!-- Success state (hidden initially) -->
+      <div id="paymentSuccessView" style="display:none">
+        <div class="payment-success">
+          <div class="checkmark">✓</div>
+          <h3>Booking confirmed!</h3>
+          <p id="successDetail">Your yoga class has been booked.</p>
+          <button class="done-btn" onclick="closePaymentModal()">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Chatbot Widget ===== -->
+  <button class="chatbot-fab" id="chatFab" aria-label="Open chat">
+    <span class="badge"></span>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  </button>
+
+  <div class="chatbot-window" id="chatWindow">
+    <div class="chatbot-window__header">
+      <h3>EventSpot Assistant</h3>
+      <button id="chatClose">&times;</button>
+    </div>
+    <div class="chatbot-messages" id="chatMessages"></div>
+    <div class="chatbot-input">
+      <input type="text" id="chatInput" placeholder="Type a message…" />
+      <button id="chatSend">Send</button>
+    </div>
+  </div>
+
+  <!-- ===== JavaScript ===== -->
+  <script>
+    // Category pill active toggle
+    document.querySelectorAll('.categories__list a').forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        document.querySelectorAll('.categories__list a').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+      });
+    });
+
+    // Simple search handler
+    function handleSearch() {
+      const keyword = document.getElementById('searchKeyword').value.trim();
+      const location = document.getElementById('searchLocation').value.trim() || 'Seattle, WA';
+      if (!keyword) {
+        alert('Browsing all events in ' + location);
+      } else {
+        alert('Searching for "' + keyword + '" in ' + location);
+      }
+    }
+
+    // Allow Enter key to trigger search
+    document.querySelectorAll('.search-bar__field input').forEach(input => {
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') handleSearch();
+      });
+    });
+
+    // ===== Chatbot Logic =====
+    const chatFab = document.getElementById('chatFab');
+    const chatWindow = document.getElementById('chatWindow');
+    const chatClose = document.getElementById('chatClose');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const chatSend = document.getElementById('chatSend');
+    const badge = chatFab.querySelector('.badge');
+
+    // Yoga studio schedule data (7 days a week, multiple slots per day)
+    const yogaStudios = [
+      {
+        name: 'CorePower Yoga – Capitol Hill',
+        schedule: {
+          monday:    ['6:00 AM', '9:00 AM', '12:00 PM', '5:30 PM', '7:30 PM'],
+          tuesday:   ['6:00 AM', '9:00 AM', '12:00 PM', '5:30 PM', '7:30 PM'],
+          wednesday: ['6:00 AM', '9:00 AM', '12:00 PM', '5:30 PM', '7:30 PM'],
+          thursday:  ['6:00 AM', '9:00 AM', '12:00 PM', '5:30 PM', '7:30 PM'],
+          friday:    ['6:00 AM', '9:00 AM', '12:00 PM', '5:30 PM', '7:00 PM'],
+          saturday:  ['8:00 AM', '10:00 AM', '12:00 PM', '4:00 PM', '6:00 PM'],
+          sunday:    ['8:00 AM', '10:00 AM', '12:00 PM', '4:00 PM', '6:00 PM'],
+        }
+      },
+      {
+        name: '8 Limbs Yoga – Wedgwood',
+        schedule: {
+          monday:    ['7:00 AM', '10:00 AM', '12:15 PM', '4:30 PM', '6:30 PM'],
+          tuesday:   ['7:00 AM', '10:00 AM', '12:15 PM', '4:30 PM', '6:30 PM'],
+          wednesday: ['7:00 AM', '10:00 AM', '12:15 PM', '4:30 PM', '6:30 PM'],
+          thursday:  ['7:00 AM', '10:00 AM', '12:15 PM', '4:30 PM', '6:30 PM'],
+          friday:    ['7:00 AM', '10:00 AM', '12:15 PM', '4:30 PM', '6:00 PM'],
+          saturday:  ['8:30 AM', '10:30 AM', '12:30 PM', '3:00 PM', '5:00 PM'],
+          sunday:    ['8:30 AM', '10:30 AM', '12:30 PM', '3:00 PM', '5:00 PM'],
+        }
+      },
+      {
+        name: 'Be Luminous Yoga – Fremont',
+        schedule: {
+          monday:    ['6:30 AM', '9:30 AM', '12:00 PM', '5:00 PM', '7:00 PM'],
+          tuesday:   ['6:30 AM', '9:30 AM', '12:00 PM', '5:00 PM', '7:00 PM'],
+          wednesday: ['6:30 AM', '9:30 AM', '12:00 PM', '5:00 PM', '7:00 PM'],
+          thursday:  ['6:30 AM', '9:30 AM', '12:00 PM', '5:00 PM', '7:00 PM'],
+          friday:    ['6:30 AM', '9:30 AM', '12:00 PM', '5:00 PM', '6:30 PM'],
+          saturday:  ['7:30 AM', '9:30 AM', '11:30 AM', '2:00 PM', '4:30 PM'],
+          sunday:    ['7:30 AM', '9:30 AM', '11:30 AM', '2:00 PM', '4:30 PM'],
+        }
+      }
+    ];
+
+    const dayNames = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+    const dayAliases = {
+      mon: 'monday', tue: 'tuesday', tues: 'tuesday', wed: 'wednesday',
+      thu: 'thursday', thur: 'thursday', thurs: 'thursday',
+      fri: 'friday', sat: 'saturday', sun: 'sunday',
+      // also match full names directly
+      monday: 'monday', tuesday: 'tuesday', wednesday: 'wednesday',
+      thursday: 'thursday', friday: 'friday', saturday: 'saturday', sunday: 'sunday',
+      // common words
+      today: '__today__', tomorrow: '__tomorrow__'
+    };
+
+    function detectDay(input) {
+      const lower = input.toLowerCase();
+      // Check for today/tomorrow first
+      if (/\btomorrow\b/.test(lower)) {
+        const d = new Date(); d.setDate(d.getDate() + 1);
+        return dayNames[d.getDay() === 0 ? 6 : d.getDay() - 1];
+      }
+      if (/\btoday\b/.test(lower)) {
+        const d = new Date();
+        return dayNames[d.getDay() === 0 ? 6 : d.getDay() - 1];
+      }
+      // Check for day names / abbreviations
+      for (const [alias, canonical] of Object.entries(dayAliases)) {
+        const re = new RegExp('\\b' + alias + '\\b', 'i');
+        if (re.test(lower)) return canonical;
+      }
+      return null;
+    }
+
+    function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    function buildYogaDayReply(day) {
+      return "🧘 Available yoga classes on <b>" + capitalize(day) + "</b>:";
+    }
+
+    function buildYogaStudioBlocks(day) {
+      // Returns structured studio data for rendering as pill buttons
+      return yogaStudios.map(studio => ({
+        name: studio.name,
+        shortName: studio.name.split(' – ')[0],
+        location: studio.name.split(' – ')[1] + ', Seattle',
+        slots: studio.schedule[day].slice(0, 3) // Only 3 time slots per studio
+      }));
+    }
+
+    // Pricing per studio (drop-in rate)
+    const studioPricing = {
+      'CorePower Yoga': { price: 28, location: 'Capitol Hill, Seattle' },
+      '8 Limbs Yoga':   { price: 22, location: 'Wedgwood, Seattle' },
+      'Be Luminous Yoga': { price: 20, location: 'Fremont, Seattle' },
+    };
+
+    // Track the last day the user was looking at
+    let lastSelectedDay = null;
+
+    function buildYogaDayQuickReplies(day) {
+      // Offer first time slot of each studio as quick replies
+      return yogaStudios.map(s => s.name.split(' – ')[0] + ' ' + s.schedule[day][0]);
+    }
+
+    // Detect if user picked a specific studio + time (e.g. "CorePower Yoga 6:00 AM")
+    function detectStudioTimeSelection(input) {
+      const lower = input.toLowerCase();
+      for (const studio of yogaStudios) {
+        const shortName = studio.name.split(' – ')[0].toLowerCase();
+        if (lower.includes(shortName) || lower.includes(shortName.replace(/ yoga/i, ''))) {
+          // Look for a time in the input
+          const timeMatch = input.match(/(\d{1,2}:\d{2}\s*[AaPp][Mm])/);
+          if (timeMatch) {
+            return { studioName: studio.name.split(' – ')[0], fullName: studio.name, time: timeMatch[1].toUpperCase().replace(/\s+/, ' ') };
+          }
+        }
+      }
+      return null;
+    }
+
+    const botResponses = {
+      'music': "Great choice! We have some amazing music events in Seattle:\n\n🎵 <b>Indie Nights</b> at The Crocodile – Mar 14\n🎷 <b>Jazz Collective</b> at Jazz Alley – Mar 20\n🎶 <b>Emerald City Music Festival</b> – Apr 4\n\nWould you like me to help you get tickets?",
+      'yoga': "__yoga_overview__",
+      'food': "Yum! Check out these food events in Seattle:\n\n🍽️ <b>Pike Place Chef's Table</b> – Mar 13\n🍷 <b>Wine & Small Plates Pairing</b> – Mar 28\n🌮 <b>Street Food Festival</b> – Apr 11 (Free entry!)\n\nShould I help you find a spot?",
+      'restaurant': "Yum! Check out these food events in Seattle:\n\n🍽️ <b>Pike Place Chef's Table</b> – Mar 13\n🍷 <b>Wine & Small Plates Pairing</b> – Mar 28\n🌮 <b>Street Food Festival</b> – Apr 11 (Free entry!)\n\nShould I help you find a spot?",
+      'help': "I can help you find events! Try asking about:\n\n• <b>Music</b> events\n• <b>Yoga</b> & wellness events\n• <b>Food & restaurant</b> events\n\nOr just tell me what you're interested in!",
+      'default': "I'd love to help! I can find music, yoga, and food events in Seattle for you. What type of event are you interested in?"
+    };
+
+    function addMessage(text, sender, quickReplies, studioBlocks) {
+      const msg = document.createElement('div');
+      msg.classList.add('chat-msg', sender === 'bot' ? 'chat-msg--bot' : 'chat-msg--user');
+      msg.innerHTML = text;
+
+      // Render studio blocks with time-slot pills
+      if (studioBlocks && studioBlocks.length) {
+        studioBlocks.forEach(studio => {
+          const block = document.createElement('div');
+          block.classList.add('studio-block');
+          block.innerHTML =
+            '<div class="studio-name">🧘 ' + studio.name + '</div>' +
+            '<div class="studio-location">📍 ' + studio.location + '</div>';
+          const pills = document.createElement('div');
+          pills.classList.add('time-pills');
+          studio.slots.forEach(time => {
+            const btn = document.createElement('button');
+            btn.textContent = time;
+            btn.addEventListener('click', () => sendUserMessage(studio.shortName + ' ' + time));
+            pills.appendChild(btn);
+          });
+          block.appendChild(pills);
+          msg.appendChild(block);
+        });
+        // Add a hint below
+        const hint = document.createElement('div');
+        hint.style.cssText = 'margin-top:12px;font-size:12px;color:#6f7287;';
+        hint.textContent = 'Tap a time to book your class';
+        msg.appendChild(hint);
+      }
+
+      if (quickReplies && quickReplies.length) {
+        const qr = document.createElement('div');
+        qr.classList.add('quick-replies');
+        quickReplies.forEach(label => {
+          const btn = document.createElement('button');
+          btn.textContent = label;
+          btn.addEventListener('click', () => sendUserMessage(label));
+          qr.appendChild(btn);
+        });
+        msg.appendChild(qr);
+      }
+      chatMessages.appendChild(msg);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function getBotReply(input) {
+      const lower = input.toLowerCase();
+
+      // 1. Check if user selected a specific studio + time slot
+      const selection = detectStudioTimeSelection(input);
+      if (selection) {
+        const pricing = studioPricing[selection.studioName];
+        const day = lastSelectedDay ? capitalize(lastSelectedDay) : 'your selected day';
+        return {
+          text: "Great choice! Here's your booking summary:\n\n" +
+                "🧘 <b>" + selection.fullName + "</b>\n" +
+                "📅 " + day + " at <b>" + selection.time + "</b>\n" +
+                "📍 " + (pricing ? pricing.location : 'Seattle, WA') + "\n" +
+                "💰 <b>$" + (pricing ? pricing.price + ".00" : "20.00") + "</b> (drop-in)\n\n" +
+                "Ready to pay?",
+          quickReplies: null,
+          paymentAction: {
+            studio: selection.fullName,
+            studioShort: selection.studioName,
+            time: selection.time,
+            day: day,
+            price: pricing ? pricing.price : 20,
+            location: pricing ? pricing.location : 'Seattle, WA'
+          }
+        };
+      }
+
+      // 2. Check if user is asking to sign up for yoga on a specific day
+      const wantsYoga = /yoga|sign\s*up|class|book|register|schedule|slot/.test(lower);
+      const day = detectDay(lower);
+
+      if (day && wantsYoga) {
+        lastSelectedDay = day;
+        return { text: buildYogaDayReply(day), quickReplies: null, studioBlocks: buildYogaStudioBlocks(day) };
+      }
+
+      // 3. If just a day is mentioned (after previously talking about yoga), still show schedule
+      if (day && !wantsYoga) {
+        const msgs = chatMessages.querySelectorAll('.chat-msg--bot');
+        const lastBotMsg = msgs.length ? msgs[msgs.length - 1].innerHTML : '';
+        if (lastBotMsg.includes('yoga') || lastBotMsg.includes('Yoga') || lastBotMsg.includes('🧘')) {
+          lastSelectedDay = day;
+          return { text: buildYogaDayReply(day), quickReplies: null, studioBlocks: buildYogaStudioBlocks(day) };
+        }
+      }
+
+      for (const key of Object.keys(botResponses)) {
+        if (key !== 'default' && lower.includes(key)) {
+          const val = botResponses[key];
+          // Special handling for yoga overview
+          if (val === '__yoga_overview__') {
+            // Use today's day for the default pill times
+            const d = new Date();
+            const todayDay = dayNames[d.getDay() === 0 ? 6 : d.getDay() - 1];
+            lastSelectedDay = todayDay;
+            return {
+              text: "Namaste! Here are yoga classes in Seattle with daily sessions, 7 days a week.<br>Showing times for <b>" + capitalize(todayDay) + "</b> — tell me a different day to see more!",
+              quickReplies: null,
+              studioBlocks: buildYogaStudioBlocks(todayDay)
+            };
+          }
+          return { text: val, quickReplies: null };
+        }
+      }
+      return { text: botResponses['default'], quickReplies: null };
+    }
+
+    function addPayButton(paymentData) {
+      const msg = document.createElement('div');
+      msg.classList.add('chat-msg', 'chat-msg--bot');
+      const btn = document.createElement('button');
+      btn.textContent = '💳 Proceed to Payment – $' + paymentData.price + '.00';
+      btn.style.cssText = 'padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;' +
+        'background:#635bff;color:#fff;border:none;cursor:pointer;margin-top:4px;transition:background .2s;';
+      btn.addEventListener('mouseenter', () => btn.style.background = '#5147e6');
+      btn.addEventListener('mouseleave', () => btn.style.background = '#635bff');
+      btn.addEventListener('click', () => openPaymentModal(paymentData));
+      msg.appendChild(btn);
+      chatMessages.appendChild(msg);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function sendUserMessage(text) {
+      if (!text.trim()) return;
+      addMessage(text, 'user');
+      chatInput.value = '';
+      setTimeout(() => {
+        const reply = getBotReply(text);
+        addMessage(reply.text, 'bot', reply.quickReplies, reply.studioBlocks);
+        // If a payment action is triggered, show pay button
+        if (reply.paymentAction) {
+          setTimeout(() => addPayButton(reply.paymentAction), 400);
+        }
+      }, 600);
+    }
+
+    // ===== Stripe Payment Modal Logic =====
+    const paymentOverlay = document.getElementById('paymentOverlay');
+    const paymentFormView = document.getElementById('paymentFormView');
+    const paymentSuccessView = document.getElementById('paymentSuccessView');
+    let currentPaymentData = null;
+
+    function openPaymentModal(data) {
+      currentPaymentData = data;
+      // Fill summary
+      const summary = document.getElementById('paymentSummary');
+      const serviceFee = (data.price * 0.05).toFixed(2);
+      const total = (data.price + parseFloat(serviceFee)).toFixed(2);
+      summary.innerHTML = `
+        <div class="item-row">
+          <span class="item-label">Class</span>
+          <span class="item-value">${data.studio}</span>
+        </div>
+        <div class="item-row">
+          <span class="item-label">Date &amp; Time</span>
+          <span class="item-value">${data.day} · ${data.time}</span>
+        </div>
+        <div class="item-row">
+          <span class="item-label">Location</span>
+          <span class="item-value">${data.location}</span>
+        </div>
+        <div class="item-row">
+          <span class="item-label">Drop-in class</span>
+          <span class="item-value">$${data.price}.00</span>
+        </div>
+        <div class="item-row">
+          <span class="item-label">Service fee</span>
+          <span class="item-value">$${serviceFee}</span>
+        </div>
+        <div class="item-row total-row">
+          <span class="item-label" style="font-weight:700;color:#1e0a3c">Total</span>
+          <span class="item-value">$${total}</span>
+        </div>
+      `;
+      // Update pay button text
+      document.getElementById('payBtn').innerHTML = `Pay $${total}`;
+      // Reset form
+      paymentFormView.style.display = '';
+      paymentSuccessView.style.display = 'none';
+      document.getElementById('peCardNumber').value = '';
+      document.getElementById('peExpiry').value = '';
+      document.getElementById('peCVC').value = '';
+      document.getElementById('peZip').value = '';
+      // Open overlay
+      paymentOverlay.classList.add('open');
+    }
+
+    function closePaymentModal() {
+      paymentOverlay.classList.remove('open');
+      // If success, send confirmation in chat
+      if (currentPaymentData && paymentSuccessView.style.display !== 'none') {
+        addMessage(
+          "✅ <b>Booking confirmed!</b>\n\n" +
+          "🧘 " + currentPaymentData.studio + "\n" +
+          "📅 " + currentPaymentData.day + " at " + currentPaymentData.time + "\n" +
+          "📍 " + currentPaymentData.location + "\n\n" +
+          "A confirmation email has been sent. See you on the mat! 🙏",
+          'bot'
+        );
+      }
+      currentPaymentData = null;
+    }
+
+    function processPayment() {
+      const btn = document.getElementById('payBtn');
+      const cardNum = document.getElementById('peCardNumber').value.trim();
+      const expiry = document.getElementById('peExpiry').value.trim();
+      const cvc = document.getElementById('peCVC').value.trim();
+      const zip = document.getElementById('peZip').value.trim();
+
+      // Basic validation
+      if (!cardNum || cardNum.replace(/\s/g,'').length < 15) {
+        highlightField('peCardNumber'); return;
+      }
+      if (!expiry || expiry.length < 5) {
+        highlightField('peExpiry'); return;
+      }
+      if (!cvc || cvc.length < 3) {
+        highlightField('peCVC'); return;
+      }
+      if (!zip || zip.length < 3) {
+        highlightField('peZip'); return;
+      }
+
+      // Simulate processing
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Processing…';
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = 'Pay';
+        // Show success
+        paymentFormView.style.display = 'none';
+        paymentSuccessView.style.display = '';
+        document.getElementById('successDetail').innerHTML =
+          "Your <b>" + currentPaymentData.studio + "</b> class on <b>" +
+          currentPaymentData.day + " at " + currentPaymentData.time +
+          "</b> has been booked.<br><br>A confirmation has been sent to your email.";
+      }, 2200);
+    }
+
+    function highlightField(id) {
+      const el = document.getElementById(id);
+      el.style.borderColor = '#df1b41';
+      el.style.boxShadow = '0 0 0 3px rgba(223,27,65,.15)';
+      el.focus();
+      setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 2000);
+    }
+
+    // Close modal on overlay click
+    document.getElementById('paymentOverlay').addEventListener('click', e => {
+      if (e.target === paymentOverlay) closePaymentModal();
+    });
+    document.getElementById('paymentClose').addEventListener('click', closePaymentModal);
+
+    // Payment Element tab switching
+    document.querySelectorAll('.stripe-pe-sim__tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.stripe-pe-sim__tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const form = document.getElementById('stripeCardForm');
+        if (tab.dataset.method === 'card') {
+          form.style.display = '';
+        } else {
+          form.innerHTML = '<div style="text-align:center;padding:24px;color:#6f7287;font-size:14px;">' +
+            (tab.dataset.method === 'apple' ? '  Pay' : 'Google Pay') +
+            ' is not available in this demo.<br>Please use card payment.</div>';
+          setTimeout(() => {
+            document.querySelector('[data-method="card"]').click();
+          }, 1500);
+        }
+      });
+    });
+
+    // Auto-fill with Stripe test card data on click
+    document.getElementById('peCardNumber').addEventListener('click', function() {
+      if (!this.value) {
+        this.value = '4242 4242 4242 4242';
+        document.getElementById('peExpiry').value = '12 / 34';
+        document.getElementById('peCVC').value = '567';
+        document.getElementById('peZip').value = '98101';
+      }
+    });
+
+    // Format card number input (add spaces)
+    document.getElementById('peCardNumber').addEventListener('input', function() {
+      let v = this.value.replace(/\D/g, '').substring(0, 16);
+      this.value = v.replace(/(.{4})/g, '$1 ').trim();
+    });
+    // Format expiry input
+    document.getElementById('peExpiry').addEventListener('input', function() {
+      let v = this.value.replace(/\D/g, '').substring(0, 4);
+      if (v.length >= 2) v = v.substring(0,2) + ' / ' + v.substring(2);
+      this.value = v;
+    });
+
+    // Toggle chat window
+    chatFab.addEventListener('click', () => {
+      chatWindow.classList.toggle('open');
+      badge.style.display = 'none';
+      if (chatWindow.classList.contains('open') && chatMessages.children.length === 0) {
+        // Initial greeting
+        setTimeout(() => {
+          addMessage(
+            "👋 Hi there! Would you like help finding an event?",
+            'bot',
+            ['Music', 'Yoga', 'Food & Restaurants']
+          );
+        }, 350);
+      }
+      if (chatWindow.classList.contains('open')) chatInput.focus();
+    });
+
+    chatClose.addEventListener('click', () => chatWindow.classList.remove('open'));
+
+    chatSend.addEventListener('click', () => { sendUserMessage(chatInput.value); });
+    chatInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') sendUserMessage(chatInput.value);
+    });
+  </script>
+
+</body>
+</html>
